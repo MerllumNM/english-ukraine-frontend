@@ -1,22 +1,59 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import questions from '../data/placementTestQuestions.js';
+import defaultQuestions from '../data/placementTestQuestions.js';
+import { quizService } from '../services/quizService.js';
 
+// Збалансована шкала оцінювання
 function getResultLevel(correctAnswers) {
-  if (correctAnswers <= 1) return 'A1';
-  if (correctAnswers <= 3) return 'A2';
-  if (correctAnswers <= 5) return 'B1';
-  if (correctAnswers <= 7) return 'B2';
-  return 'C1';
+  if (correctAnswers <= 2) return 'A1'; // 0–2 бали
+  if (correctAnswers <= 4) return 'A2'; // 3–4 бали
+  if (correctAnswers <= 6) return 'B1'; // 5–6 балів
+  if (correctAnswers <= 8) return 'B2'; // 7–8 балів
+  return 'C1';                          // 9–10 балів
 }
 
 export default function PlacementTestModal({ language, t, onClose, onFindTeacher }) {
+  const [questions, setQuestions] = useState(defaultQuestions);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [apiError, setApiError] = useState('');
+
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [answers, setAnswers] = useState(() => Array(questions.length).fill(null));
+  const [answers, setAnswers] = useState(() => Array(defaultQuestions.length).fill(null));
   const [result, setResult] = useState(null);
+  const [recommendations, setRecommendations] = useState(null);
   const dialogRef = useRef(null);
-  const question = questions[currentQuestion];
+
+  // Завантаження питань з API з фолбеком на локальний файл
+  const loadQuestions = useCallback(async () => {
+    setIsLoading(true);
+    setApiError('');
+    try {
+      const data = await quizService.getQuizQuestions();
+      if (Array.isArray(data) && data.length > 0) {
+        setQuestions(data);
+        setAnswers(Array(data.length).fill(null));
+      } else if (data?.questions && Array.isArray(data.questions) && data.questions.length > 0) {
+        setQuestions(data.questions);
+        setAnswers(Array(data.questions.length).fill(null));
+      } else {
+        setQuestions(defaultQuestions);
+        setAnswers(Array(defaultQuestions.length).fill(null));
+      }
+    } catch {
+      setQuestions(defaultQuestions);
+      setAnswers(Array(defaultQuestions.length).fill(null));
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadQuestions();
+  }, [loadQuestions]);
+
+  const question = questions[currentQuestion] || questions[0];
   const answeredCount = answers.filter((answer) => answer !== null).length;
-  const progress = result ? 100 : ((currentQuestion + 1) / questions.length) * 100;
+  const progress = result ? 100 : questions.length > 0 ? ((currentQuestion + 1) / questions.length) * 100 : 0;
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
@@ -51,25 +88,58 @@ export default function PlacementTestModal({ language, t, onClose, onFindTeacher
     });
   }
 
-  function advance() {
+  async function advance() {
     if (answers[currentQuestion] === null) return;
+
     if (currentQuestion < questions.length - 1) {
       setCurrentQuestion((index) => index + 1);
       return;
     }
 
+    setIsSubmitting(true);
+    setApiError('');
+
     const correctAnswers = answers.reduce(
-      (total, answer, index) => total + (answer === questions[index].answer ? 1 : 0),
+      (total, answer, index) => total + (answer === questions[index]?.answer ? 1 : 0),
       0
     );
-    setResult({ correctAnswers, level: getResultLevel(correctAnswers) });
+
+    try {
+      const apiResponse = await quizService.submitQuizAnswers(answers);
+      const finalScore = typeof apiResponse?.correctAnswers === 'number' ? apiResponse.correctAnswers : correctAnswers;
+      
+      // Рахуємо рівень за нашою збалансованою шкалою
+      const finalLevel = getResultLevel(finalScore);
+
+      setResult({ correctAnswers: finalScore, level: finalLevel });
+
+      if (apiResponse?.recommendations) {
+        setRecommendations(apiResponse.recommendations);
+      } else {
+        try {
+          const recs = await quizService.getRecommendations(finalLevel);
+          setRecommendations(recs);
+        } catch {
+          // Пропускаємо рекомендації при помилці
+        }
+      }
+    } catch {
+      setResult({ correctAnswers, level: getResultLevel(correctAnswers) });
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   function retry() {
     setCurrentQuestion(0);
     setAnswers(Array(questions.length).fill(null));
     setResult(null);
+    setRecommendations(null);
   }
+
+  const questionPrompt = typeof question?.prompt === 'object'
+    ? (question.prompt[language] || question.prompt.uk || question.prompt.en)
+    : (question?.prompt || question?.question || '');
 
   return (
     <div
@@ -97,7 +167,7 @@ export default function PlacementTestModal({ language, t, onClose, onFindTeacher
         <header className="placement-test-header">
           <p className="section-eyebrow">{t.placementTestEyebrow}</p>
           <h2 id="placement-test-title">{result ? t.placementTestResultTitle : t.placementTestTitle}</h2>
-          {!result && (
+          {!result && !isLoading && (
             <>
               <p className="placement-test-count">
                 {t.placementTestQuestion(currentQuestion + 1, questions.length)}
@@ -116,7 +186,11 @@ export default function PlacementTestModal({ language, t, onClose, onFindTeacher
           )}
         </header>
 
-        {result ? (
+        {isLoading ? (
+          <div style={{ textAlign: 'center', padding: '3rem 1rem' }}>
+            <p style={{ fontSize: '1.1rem', opacity: 0.8 }}>{(t && t.loading) || 'Завантаження питань тесту...'}</p>
+          </div>
+        ) : result ? (
           <div className="placement-test-result">
             <p className="placement-test-score">
               <strong>{result.correctAnswers}/{questions.length}</strong>
@@ -128,8 +202,25 @@ export default function PlacementTestModal({ language, t, onClose, onFindTeacher
             <p className="section-eyebrow">{t.placementTestEstimatedLevel}</p>
             <p className="placement-test-level">{result.level}</p>
             <p className="placement-test-level-description">{t.placementTestLevelDescriptions[result.level]}</p>
-            <p className="placement-test-scale">{t.placementTestResultScale}</p>
-            <div className="placement-test-actions">
+            <p className="placement-test-scale">Шкала: 0–2 — A1, 3–4 — A2, 5–6 — B1, 7–8 — B2, 9–10 — C1.</p>
+
+            {recommendations && (
+              <div className="placement-test-recommendations" style={{ marginTop: '1.5rem', textAlign: 'left' }}>
+                <p className="section-eyebrow" style={{ marginBottom: '0.5rem' }}>Рекомендовано для вас:</p>
+                {recommendations.teachers?.length > 0 && (
+                  <p style={{ fontSize: '0.95rem' }}>
+                    <strong>Викладачі:</strong> {recommendations.teachers.map((item) => item.name).join(', ')}
+                  </p>
+                )}
+                {recommendations.courses?.length > 0 && (
+                  <p style={{ fontSize: '0.95rem' }}>
+                    <strong>Курси:</strong> {recommendations.courses.map((item) => item.title).join(', ')}
+                  </p>
+                )}
+              </div>
+            )}
+
+            <div className="placement-test-actions" style={{ marginTop: '1.5rem' }}>
               <button className="secondary-button" type="button" onClick={retry}>
                 {t.placementTestRetry}
               </button>
@@ -140,14 +231,14 @@ export default function PlacementTestModal({ language, t, onClose, onFindTeacher
           </div>
         ) : (
           <div className="placement-test-question">
-            <span className="placement-test-level-tag">{question.level}</span>
-            <h3>{question.prompt[language]}</h3>
+            <span className="placement-test-level-tag">{question.level || 'A1'}</span>
+            <h3>{questionPrompt}</h3>
             <fieldset className="placement-test-options">
               <legend className="visually-hidden">{t.placementTestChooseAnswer}</legend>
               {question.options.map((option, index) => (
                 <label
                   className={`placement-test-option${answers[currentQuestion] === index ? ' is-selected' : ''}`}
-                  key={option}
+                  key={typeof option === 'string' ? option : option.text || index}
                 >
                   <input
                     type="radio"
@@ -155,15 +246,18 @@ export default function PlacementTestModal({ language, t, onClose, onFindTeacher
                     checked={answers[currentQuestion] === index}
                     onChange={() => selectAnswer(index)}
                   />
-                  <span>{option}</span>
+                  <span>{typeof option === 'string' ? option : option.text}</span>
                 </label>
               ))}
             </fieldset>
+
+            {apiError && <p className="auth-error" style={{ marginTop: '1rem' }}>{apiError}</p>}
+
             <div className="placement-test-actions">
               <button
                 className="secondary-button"
                 type="button"
-                disabled={currentQuestion === 0}
+                disabled={currentQuestion === 0 || isSubmitting}
                 onClick={() => setCurrentQuestion((index) => index - 1)}
               >
                 {t.placementTestPrevious}
@@ -171,10 +265,14 @@ export default function PlacementTestModal({ language, t, onClose, onFindTeacher
               <button
                 className="auth-submit"
                 type="button"
-                disabled={answers[currentQuestion] === null}
+                disabled={answers[currentQuestion] === null || isSubmitting}
                 onClick={advance}
               >
-                {currentQuestion === questions.length - 1 ? t.placementTestFinish : t.placementTestNext}
+                {isSubmitting
+                  ? ((t && t.submitting) || 'Обробка...')
+                  : currentQuestion === questions.length - 1
+                  ? t.placementTestFinish
+                  : t.placementTestNext}
               </button>
             </div>
           </div>
