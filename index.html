@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#FFF5CF" />
+    <meta
+      name="description"
+      content="Персональні уроки англійської, досвідчені викладачі та курси для ваших цілей."
+    />
+    <title>Англійська, що веде далі | Lingo</title>
+    <script>
+      try {
+        const savedTheme = window.localStorage.getItem('lingo-theme');
+        document.documentElement.dataset.theme = savedTheme === 'dark' ? 'dark' : 'light';
+        document.querySelector('meta[name="theme-color"]').content =
+          savedTheme === 'dark' ? '#2F3A33' : '#FFF5CF';
+      } catch (error) {
+        document.documentElement.dataset.theme = 'light';
+        console.error('Unable to restore the saved theme.', error);
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
