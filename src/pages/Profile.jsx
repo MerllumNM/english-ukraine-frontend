@@ -16,15 +16,17 @@ export default function Profile({
   onHome
 }) {
   const [isEditing, setIsEditing] = useState(false);
-  const [name, setName] = useState(user.name);
+  const [name, setName] = useState(user?.name || '');
   const [error, setError] = useState('');
   const [savedError, setSavedError] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [savedTab, setSavedTab] = useState('teachers');
   const fileInput = useRef(null);
-  const savedTeachers = teachers.filter((teacher) => user.savedTeachers?.includes(teacher.id));
+
+  const savedTeachers = teachers.filter((teacher) => (user?.savedTeachers || []).includes(teacher.id));
   const allCourses = [...courses, ...teacherCourses];
-  const savedCourses = allCourses.filter((course) => user.savedCourses?.includes(course.id));
+  const savedCourses = allCourses.filter((course) => (user?.savedCourses || []).includes(course.id));
+  const userReviews = Array.isArray(user?.reviews) ? user.reviews : [];
 
   async function saveName(event) {
     event.preventDefault();
@@ -100,10 +102,12 @@ export default function Profile({
 
       <section className="profile-card" aria-label={t.profileDetails}>
         <div className="profile-avatar-wrap">
-          {user.avatar ? (
+          {user?.avatar ? (
             <img className="profile-avatar" src={user.avatar} alt={t.profileAvatarAlt} />
           ) : (
-            <span className="profile-avatar profile-avatar-placeholder" aria-hidden="true">{user.name[0]?.toUpperCase()}</span>
+            <span className="profile-avatar profile-avatar-placeholder" aria-hidden="true">
+              {(user?.name?.[0] || 'U').toUpperCase()}
+            </span>
           )}
           <button className="avatar-edit" type="button" onClick={() => fileInput.current?.click()}>{t.profileChangeAvatar}</button>
           <input ref={fileInput} className="visually-hidden" type="file" accept="image/*" onChange={changeAvatar} />
@@ -118,13 +122,13 @@ export default function Profile({
               </label>
               <div className="profile-actions">
                 <button className="auth-submit" type="submit" disabled={isSaving}>{t.profileSave}</button>
-                <button className="secondary-button" type="button" onClick={() => { setName(user.name); setIsEditing(false); }}>{t.profileCancel}</button>
+                <button className="secondary-button" type="button" onClick={() => { setName(user?.name || ''); setIsEditing(false); }}>{t.profileCancel}</button>
               </div>
             </form>
           ) : (
             <>
-              <h2>{user.name}</h2>
-              <p>{user.email}</p>
+              <h2>{user?.name}</h2>
+              <p>{user?.email}</p>
               <button className="secondary-button" type="button" onClick={() => setIsEditing(true)}>{t.profileEdit}</button>
             </>
           )}
@@ -132,7 +136,7 @@ export default function Profile({
         </div>
       </section>
 
-      {user.role === 'teacher' && (
+      {user?.role === 'teacher' && (
         <TeacherDashboard
           user={user}
           language={language}
@@ -192,64 +196,72 @@ export default function Profile({
           {savedTab === 'teachers' ? (
             savedTeachers.length ? (
               <div className="profile-saved-grid">
-                {savedTeachers.map((teacher) => (
-                  <article className="profile-saved-card profile-saved-teacher" key={teacher.id}>
-                    <span className={`profile-teacher-avatar ${teacher.photoClass}`} aria-hidden="true">
-                      {teacher.name[language][0]}
-                    </span>
+                {savedTeachers.map((teacher) => {
+                  const teacherName = typeof teacher.name === 'object' ? (teacher.name[language] || teacher.name.uk) : teacher.name;
+                  const teacherSpec = typeof teacher.specialty === 'object' ? (teacher.specialty[language] || teacher.specialty.uk) : teacher.specialty;
+                  return (
+                    <article className="profile-saved-card profile-saved-teacher" key={teacher.id}>
+                      <span className={`profile-teacher-avatar ${teacher.photoClass || ''}`} aria-hidden="true">
+                        {(teacherName?.[0] || 'T')}
+                      </span>
+                      <div className="profile-saved-details">
+                        <h3>{teacherName}</h3>
+                        <p>{teacherSpec}</p>
+                        <a
+                          href={`/teachers#teacher-${teacher.id}`}
+                          onClick={(event) => {
+                            event.preventDefault();
+                            onNavigate(`/teachers#teacher-${teacher.id}`);
+                          }}
+                        >
+                          {t.viewTeacherProfile}
+                        </a>
+                      </div>
+                      <button
+                        className="profile-saved-remove"
+                        type="button"
+                        aria-label={`${t.removeSaved} ${teacherName}`}
+                        onClick={() => removeSavedTeacher(teacher.id)}
+                      >
+                        {t.removeSaved}
+                      </button>
+                    </article>
+                  );
+                })}
+              </div>
+            ) : <p className="profile-empty">{t.profileNoTeachers}</p>
+          ) : savedCourses.length ? (
+            <div className="profile-saved-grid">
+              {savedCourses.map((course) => {
+                const courseTitle = typeof course.title === 'object' ? (course.title[language] || course.title.uk) : course.title;
+                const courseDesc = typeof course.description === 'object' ? (course.description[language] || course.description.uk) : course.description;
+                return (
+                  <article className="profile-saved-card profile-saved-course" key={course.id}>
                     <div className="profile-saved-details">
-                      <h3>{teacher.name[language]}</h3>
-                      <p>{teacher.specialty[language]}</p>
+                      <h3>{courseTitle}</h3>
+                      <p>{courseDesc}</p>
+                      <span className="profile-course-level">{t.courseLevel}: {course.level}</span>
                       <a
-                        href={`/teachers#teacher-${teacher.id}`}
+                        href={`/courses#course-${course.id}`}
                         onClick={(event) => {
                           event.preventDefault();
-                          onNavigate(`/teachers#teacher-${teacher.id}`);
+                          onNavigate(`/courses#course-${course.id}`);
                         }}
                       >
-                        {t.viewTeacherProfile}
+                        {t.viewCourse}
                       </a>
                     </div>
                     <button
                       className="profile-saved-remove"
                       type="button"
-                      aria-label={`${t.removeSaved} ${teacher.name[language]}`}
-                      onClick={() => removeSavedTeacher(teacher.id)}
+                      aria-label={`${t.removeSaved} ${courseTitle}`}
+                      onClick={() => removeSavedCourse(course.id)}
                     >
                       {t.removeSaved}
                     </button>
                   </article>
-                ))}
-              </div>
-            ) : <p className="profile-empty">{t.profileNoTeachers}</p>
-          ) : savedCourses.length ? (
-            <div className="profile-saved-grid">
-              {savedCourses.map((course) => (
-                <article className="profile-saved-card profile-saved-course" key={course.id}>
-                  <div className="profile-saved-details">
-                    <h3>{course.title[language]}</h3>
-                    <p>{course.description[language]}</p>
-                    <span className="profile-course-level">{t.courseLevel}: {course.level}</span>
-                    <a
-                      href={`/courses#course-${course.id}`}
-                      onClick={(event) => {
-                        event.preventDefault();
-                        onNavigate(`/courses#course-${course.id}`);
-                      }}
-                    >
-                      {t.viewCourse}
-                    </a>
-                  </div>
-                  <button
-                    className="profile-saved-remove"
-                    type="button"
-                    aria-label={`${t.removeSaved} ${course.title[language]}`}
-                    onClick={() => removeSavedCourse(course.id)}
-                  >
-                    {t.removeSaved}
-                  </button>
-                </article>
-              ))}
+                );
+              })}
             </div>
           ) : <p className="profile-empty">{t.profileNoCourses}</p>}
         </div>
@@ -257,9 +269,9 @@ export default function Profile({
 
       <section className="profile-section" aria-labelledby="reviews-title">
         <h2 id="reviews-title">{t.profileReviews}</h2>
-        {user.reviews.length ? (
+        {userReviews.length ? (
           <ul className="profile-review-list">
-            {user.reviews.map((review) => <li key={review.id || review.text}>{review.text}</li>)}
+            {userReviews.map((review) => <li key={review.id || review.text}>{review.text || review.comment}</li>)}
           </ul>
         ) : <p className="profile-empty">{t.profileNoReviews}</p>}
       </section>

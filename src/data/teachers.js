@@ -3,51 +3,69 @@ const teachers = [
     id: 1,
     name: { uk: 'Анна Коваленко', en: 'Anna Kovalenko' },
     specialty: { uk: 'Розмовна англійська та впевненість', en: 'Speaking and confidence' },
-    description: { uk: 'Анна допомагає дорослим студентам подолати мовний бар’єр і впевнено використовувати англійську в повсякденному житті.', en: 'Anna helps adult learners overcome the language barrier and use English confidently in everyday life.' },
-    fullDescription: { uk: 'Анна створює дружню атмосферу, у якій студенти можуть практикувати англійську без страху помилитися. Вона поєднує розмовні завдання з практичною граматикою та підбирає темп і матеріали під цілі кожного учня.', en: 'Anna creates a welcoming environment where learners can practise English without worrying about mistakes. She combines conversation tasks with practical grammar and adapts the pace and materials to each student’s goals.' },
+    description: {
+      uk: 'Анна допомагає дорослим студентам подолати мовний бар’єр і вільно спілкуватися англійською в повсякденному житті та роботі.',
+      en: 'Anna helps adult learners overcome the language barrier and speak English fluently in everyday life and work.'
+    },
+    fullDescription: {
+      uk: 'Анна створює легку та підтримуючу атмосферу на уроках, де студенти починають говорити з першого заняття без страху помилитися. Поєднує живі дискусії, розбір фільмів і практичну граматику під цілі кожного учня.',
+      en: 'Anna creates a supportive classroom environment where students start speaking from day one without fear of mistakes. She combines lively discussions, film clips, and practical grammar tailored to each learner.'
+    },
     rating: 4.9,
-    level: 'C2',
+    level: 'A2–C1',
     experienceYears: 8,
     experience: 'teacherExperience1',
-    hourlyRate: 28,
+    hourlyRate: 12,
     photoClass: '',
-    image: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=900&q=85',
+    image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&crop=faces&w=900&h=620&q=85',
     languages: { uk: ['Українська', 'Англійська'], en: ['Ukrainian', 'English'] },
     format: { uk: ['Онлайн'], en: ['Online'] },
     specializations: { uk: ['Розмовна практика', 'Загальна англійська'], en: ['Conversation practice', 'General English'] },
-    education: { uk: ['CELTA', 'Магістр прикладної лінгвістики'], en: ['CELTA', 'MA in Applied Linguistics'] }
+    education: { uk: ['CELTA', 'Магістр прикладної лінгвістики (ЛНУ ім. І. Франка)'], en: ['CELTA', 'MA in Applied Linguistics'] }
   },
   {
     id: 2,
     name: { uk: 'Максим Шевченко', en: 'Maksym Shevchenko' },
-    specialty: { uk: 'Ділова англійська', en: 'Business English' },
-    description: { uk: 'Максим працює з професіоналами, яким потрібна англійська для зустрічей, переговорів і міжнародних команд.', en: 'Maksym works with professionals who need English for meetings, negotiations, and international teams.' },
-    fullDescription: { uk: 'Максим допомагає фахівцям чітко доносити свої ідеї, упевнено брати участь у зустрічах і писати професійні листи. На уроках він моделює робочі ситуації та дає конкретний зворотний зв’язок щодо мови й подачі.', en: 'Maksym helps professionals communicate ideas clearly, take part in meetings with confidence, and write effective emails. Lessons use workplace scenarios and practical feedback on both language and delivery.' },
-    rating: 4.8,
-    level: 'C2',
+    specialty: { uk: 'Ділова англійська та переговори', en: 'Business English and negotiations' },
+    description: {
+      uk: 'Максим готує спеціалістів до міжнародних переговорів, презентацій, ділового листування та роботи в зарубіжних компаніях.',
+      en: 'Maksym prepares professionals for international negotiations, presentations, business correspondence, and global teams.'
+    },
+    fullDescription: {
+      uk: 'Максим має 6 років досвіду корпоративного викладання. На уроках моделює реальні бізнес-кейси: від пітчингу ідей та проведення мітингів до складних переговорів із клієнтами.',
+      en: 'Maksym has 6 years of corporate teaching experience. Lessons simulate real business cases: from pitching ideas and leading meetings to complex client negotiations.'
+    },
+    rating: 4.7,
+    level: 'B1–C2',
     experienceYears: 6,
     experience: 'teacherExperience2',
-    hourlyRate: 32,
+    hourlyRate: 14,
     photoClass: 'teacher-photo-two',
-    image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=900&q=85',
+    image: 'https://images.unsplash.com/photo-1556157382-97eda2d62296?auto=format&fit=crop&crop=faces&w=900&h=620&q=85',
     languages: { uk: ['Українська', 'Англійська'], en: ['Ukrainian', 'English'] },
     format: { uk: ['Онлайн', 'Офлайн'], en: ['Online', 'In person'] },
     specializations: { uk: ['Ділова англійська', 'Англійська для IT'], en: ['Business English', 'English for IT'] },
-    education: { uk: ['CELTA', 'Сертифікат Business English'], en: ['CELTA', 'Business English Certificate'] }
+    education: { uk: ['CELTA', 'Cambridge BEC Higher'], en: ['CELTA', 'Cambridge BEC Higher'] }
   },
   {
     id: 3,
     name: { uk: 'Софія Мельник', en: 'Sofia Melnyk' },
     specialty: { uk: 'Підготовка до IELTS', en: 'IELTS preparation' },
-    description: { uk: 'Софія спеціалізується на підготовці до міжнародних іспитів і допомагає студентам зрозуміти критерії оцінювання.', en: 'Sofia specialises in international exam preparation and helps learners understand assessment criteria.' },
-    fullDescription: { uk: 'Софія має досвід підготовки студентів до IELTS та Cambridge English. Вона розбирає критерії оцінювання, допомагає будувати план самостійної практики й надає докладний зворотний зв’язок на письмові та усні відповіді.', en: 'Sofia has experience preparing learners for IELTS and Cambridge English exams. She explains assessment criteria, helps students plan independent practice, and provides detailed feedback on written and spoken responses.' },
-    rating: 4.7,
-    level: 'C2',
+    description: {
+      uk: 'Софія спеціалізується на інтенсивній підготовці до IELTS Academic і General, допомагаючи вийти на бал 7.5+ за чітким планом.',
+      en: 'Sofia specialises in intensive IELTS Academic and General preparation, helping students reach band 7.5+ with a clear roadmap.'
+    },
+    fullDescription: {
+      uk: 'Софія детально розбирає критерії оцінювання кожної секції іспиту, вчить уникати типових пасток у Reading та Listening і перевіряє есе з детальним фідбеком.',
+      en: 'Sofia breaks down the assessment criteria for every exam section, teaches how to avoid common traps in Reading and Listening, and gives detailed feedback on essays.'
+    },
+    rating: 5.0,
+    level: 'B2–C2',
     experienceYears: 10,
     experience: 'teacherExperience3',
-    hourlyRate: 35,
+    hourlyRate: 16,
     photoClass: 'teacher-photo-three',
-    image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=900&q=85',
+    image: 'https://images.unsplash.com/photo-1594744803329-e58b31de8bf5?auto=format&fit=crop&crop=faces&w=900&h=620&q=85',
     languages: { uk: ['Українська', 'Англійська'], en: ['Ukrainian', 'English'] },
     format: { uk: ['Онлайн'], en: ['Online'] },
     specializations: { uk: ['IELTS', 'Cambridge English', 'Академічне письмо'], en: ['IELTS', 'Cambridge English', 'Academic writing'] },
@@ -56,32 +74,44 @@ const teachers = [
   {
     id: 4,
     name: { uk: 'Ірина Бондар', en: 'Iryna Bondar' },
-    specialty: { uk: 'Англійська для подорожей', en: 'English for travel' },
-    description: { uk: 'Ірина проводить практичні заняття для студентів, які хочуть вільніше почуватися в подорожах і нових ситуаціях.', en: 'Iryna offers practical lessons for learners who want to feel more at ease while travelling and in new situations.' },
-    fullDescription: { uk: 'Ірина допомагає студентам застосовувати англійську у звичних подорожніх ситуаціях: від заселення до розмов із новими знайомими. Заняття включають рольові вправи, роботу над вимовою та корисні мовні стратегії.', en: 'Iryna helps learners use English in common travel situations, from checking in to chatting with new people. Lessons include role-play, pronunciation practice, and useful communication strategies.' },
+    specialty: { uk: 'Англійська для подорожей та релокації', en: 'English for travel and relocation' },
+    description: {
+      uk: 'Ірина проводить практичні уроки для тих, хто хоче впевнено почуватися в аеропортах, готелях, банках і повсякденних ситуаціях за кордоном.',
+      en: 'Iryna delivers practical lessons for learners who want to feel confident in airports, hotels, banks, and everyday situations abroad.'
+    },
+    fullDescription: {
+      uk: 'Ірина будує кожне заняття навколо реальних діалогів та аудіювання різних акцентів. Ви швидко опануєте живу лексику для подорожей і перестанете губитися в розмові з носіями мови.',
+      en: 'Iryna builds every lesson around real-life dialogues and listening to various accents. You will quickly master practical travel vocabulary without freezing up.'
+    },
     rating: 4.6,
-    level: 'C1',
+    level: 'A1–B2',
     experienceYears: 5,
-    hourlyRate: 24,
+    hourlyRate: 9,
     photoClass: 'teacher-photo-two',
-    image: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=900&q=85',
+    image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&crop=faces&w=900&h=620&q=85',
     languages: { uk: ['Українська', 'Англійська', 'Польська'], en: ['Ukrainian', 'English', 'Polish'] },
     format: { uk: ['Онлайн'], en: ['Online'] },
     specializations: { uk: ['Англійська для подорожей', 'Розмовна практика'], en: ['English for travel', 'Conversation practice'] },
-    education: { uk: ['TKT', 'Бакалавр філології'], en: ['TKT', 'BA in Philology'] }
+    education: { uk: ['TKT', 'Бакалавр філології (КНУ ім. Т. Шевченка)'], en: ['TKT', 'BA in Philology'] }
   },
   {
     id: 5,
     name: { uk: 'Дмитро Лисенко', en: 'Dmytro Lysenko' },
-    specialty: { uk: 'Англійська для IT', en: 'English for IT' },
-    description: { uk: 'Дмитро допомагає ІТ-фахівцям чітко доносити технічні ідеї, працювати з командами та готуватися до співбесід.', en: 'Dmytro helps IT professionals communicate technical ideas clearly, work with teams, and prepare for interviews.' },
-    fullDescription: { uk: 'Дмитро знайомий із комунікаційними потребами міжнародних продуктових команд. Він допомагає студентам пояснювати технічні рішення, брати участь у код-рев’ю та готуватися до співбесід англійською.', en: 'Dmytro understands the communication needs of international product teams. He helps learners explain technical decisions, take part in code reviews, and prepare for interviews in English.' },
+    specialty: { uk: 'Англійська для IT-фахівців', en: 'English for IT professionals' },
+    description: {
+      uk: 'Дмитро допомагає розробникам, тестувальникам і PM проходити технічні співбесіди, вести дейлі-мітинги та захищати архітектурні рішення.',
+      en: 'Dmytro helps developers, QA engineers, and PMs pass technical interviews, run daily stand-ups, and present architectural decisions.'
+    },
+    fullDescription: {
+      uk: 'Дмитро працював у продуктових IT-командах, тому чудово знає технічну термінологію та стиль спілкування в Slack, Jira і на демо-дзвінках із замовниками.',
+      en: 'Dmytro has worked inside product IT teams and knows technical terminology and communication styles across Slack, Jira, and client demo calls.'
+    },
     rating: 4.9,
-    level: 'C2',
+    level: 'B1–C2',
     experienceYears: 9,
-    hourlyRate: 38,
+    hourlyRate: 15,
     photoClass: '',
-    image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=900&q=85',
+    image: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&crop=faces&w=900&h=620&q=85',
     languages: { uk: ['Українська', 'Англійська'], en: ['Ukrainian', 'English'] },
     format: { uk: ['Онлайн'], en: ['Online'] },
     specializations: { uk: ['Англійська для IT', 'Ділова англійська'], en: ['English for IT', 'Business English'] },
@@ -90,15 +120,22 @@ const teachers = [
   {
     id: 6,
     name: { uk: 'Наталія Романюк', en: 'Natalia Romaniuk' },
-    specialty: { uk: 'Англійська для підлітків', en: 'English for teens' },
-    description: { uk: 'Наталія створює дружню атмосферу, у якій підлітки розвивають англійську через проєкти та актуальні теми.', en: 'Natalia creates a friendly environment where teenagers develop their English through projects and relevant topics.' },
-    fullDescription: { uk: 'Наталія заохочує підлітків використовувати англійську в проєктах, обговореннях і повсякденних ситуаціях. Вона враховує інтереси студентів та поєднує мовну практику з розвитком самостійності.', en: 'Natalia encourages teenagers to use English in projects, discussions, and everyday situations. She takes learners’ interests into account and combines language practice with building independence.' },
+    specialty: { uk: 'Англійська для підлітків та НМТ', en: 'English for teens and exams' },
+    description: {
+      uk: 'Наталія готує старшокласників до НМТ та розвиває живу англійську через сучасні теми, інтерактивні проєкти й без нудного зубріння.',
+      en: 'Natalia prepares high-school students for national exams and develops natural English through modern topics and interactive projects.'
+    },
+    fullDescription: {
+      uk: 'Наталія знаходить спільну мову з підлітками, систематизує всю шкільну граматику у зрозумілі схеми та допомагає впевнено скласти іспити на високий бал.',
+      en: 'Natalia connects easily with teenagers, structures grammar into clear frameworks, and helps students achieve top exam scores.'
+    },
     rating: 4.8,
-    level: 'C1',
+    level: 'A2–B2',
     experienceYears: 7,
-    hourlyRate: 26,
+    experience: 'teacherExperience3',
+    hourlyRate: 10,
     photoClass: 'teacher-photo-three',
-    image: 'https://images.unsplash.com/photo-1551836022-4c4c79ecde51?auto=format&fit=crop&w=900&q=85',
+    image: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&crop=faces&w=900&h=620&q=85',
     languages: { uk: ['Українська', 'Англійська'], en: ['Ukrainian', 'English'] },
     format: { uk: ['Онлайн', 'Офлайн'], en: ['Online', 'In person'] },
     specializations: { uk: ['Англійська для підлітків', 'Загальна англійська'], en: ['English for teens', 'General English'] },
@@ -108,31 +145,43 @@ const teachers = [
     id: 7,
     name: { uk: 'Олександр Петренко', en: 'Oleksandr Petrenko' },
     specialty: { uk: 'Англійська для медицини', en: 'English for healthcare' },
-    description: { uk: 'Олександр навчає медичних працівників професійної комунікації з пацієнтами та міжнародними колегами.', en: 'Oleksandr teaches healthcare professionals to communicate with patients and international colleagues.' },
-    fullDescription: { uk: 'Олександр допомагає медичним працівникам використовувати англійську у спілкуванні з пацієнтами та міжнародними командами. Уроки охоплюють збір анамнезу, пояснення процедур і точне використання фахової термінології.', en: 'Oleksandr helps healthcare workers use English with patients and international teams. Lessons cover patient histories, explaining procedures, and using specialist terminology accurately.' },
-    rating: 4.7,
-    level: 'C2',
+    description: {
+      uk: 'Олександр навчає лікарів, інтернів і медичних спеціалістів професійної комунікації з пацієнтами та участі в міжнародних конференціях.',
+      en: 'Oleksandr trains doctors, interns, and medical specialists in patient communication and international conference presentations.'
+    },
+    fullDescription: {
+      uk: 'Олександр спеціалізується на медичній термінології, читанні клінічних досліджень англійською та підготовці лікарів до стажувань у європейських клініках.',
+      en: 'Oleksandr specialises in medical terminology, reading clinical studies in English, and preparing doctors for internships in European clinics.'
+    },
+    rating: 4.8,
+    level: 'B1–C2',
     experienceYears: 11,
-    hourlyRate: 40,
+    hourlyRate: 15,
     photoClass: 'teacher-photo-two',
-    image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=900&q=85',
+    image: 'https://images.unsplash.com/photo-1537511446984-935f663eb1f4?auto=format&fit=crop&crop=faces&w=900&h=620&q=85',
     languages: { uk: ['Українська', 'Англійська'], en: ['Ukrainian', 'English'] },
     format: { uk: ['Онлайн'], en: ['Online'] },
     specializations: { uk: ['Англійська для медицини', 'Медична термінологія'], en: ['English for healthcare', 'Medical terminology'] },
-    education: { uk: ['CELTA', 'Сертифікат English for Medicine'], en: ['CELTA', 'English for Medicine Certificate'] }
+    education: { uk: ['CELTA', 'OET Preparation Specialist'], en: ['CELTA', 'OET Preparation Specialist'] }
   },
   {
     id: 8,
     name: { uk: 'Марія Ткаченко', en: 'Maria Tkachenko' },
-    specialty: { uk: 'Загальна англійська', en: 'General English' },
-    description: { uk: 'Марія допомагає початківцям будувати міцну мовну основу у власному темпі та без зайвого стресу.', en: 'Maria helps beginners build a strong language foundation at their own pace and without unnecessary pressure.' },
-    fullDescription: { uk: 'Марія пояснює базову граматику й лексику зрозумілими кроками та створює простір для регулярної практики. Вона підлаштовує заняття під потреби студентів-початківців і відзначає прогрес на кожному етапі.', en: 'Maria teaches core grammar and vocabulary in clear steps and makes room for regular practice. She adapts lessons to beginner learners and highlights progress at every stage.' },
-    rating: 4.5,
-    level: 'C1',
+    specialty: { uk: 'Англійська з нуля (Beginner – Elementary)', en: 'English from scratch (Beginner – Elementary)' },
+    description: {
+      uk: 'Марія допомагає початківцям закласти міцну базу читання, вимови й граматики у спокійному темпі без стресу та складних термінів.',
+      en: 'Maria helps beginners build a solid foundation in reading, pronunciation, and grammar at a comfortable pace without stress.'
+    },
+    fullDescription: {
+      uk: 'Марія спеціалізується на роботі з рівнями A1–A2. Пояснює правила простими прикладами з життя та допомагає заговорити базовими фразами вже в перший місяць навчання.',
+      en: 'Maria specialises in A1–A2 levels. She explains grammar with simple everyday examples and gets beginners speaking basic phrases within the first month.'
+    },
+    rating: 4.7,
+    level: 'A1–A2',
     experienceYears: 4,
-    hourlyRate: 22,
+    hourlyRate: 8,
     photoClass: '',
-    image: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=900&q=85',
+    image: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&crop=faces&w=900&h=620&q=85',
     languages: { uk: ['Українська', 'Англійська'], en: ['Ukrainian', 'English'] },
     format: { uk: ['Онлайн'], en: ['Online'] },
     specializations: { uk: ['Загальна англійська', 'Англійська для початківців'], en: ['General English', 'English for beginners'] },
@@ -141,15 +190,21 @@ const teachers = [
   {
     id: 9,
     name: { uk: 'Катерина Савчук', en: 'Kateryna Savchuk' },
-    specialty: { uk: 'Академічне письмо', en: 'Academic writing' },
-    description: { uk: 'Катерина працює зі студентами й дослідниками над структурою, стилем і ясністю академічних текстів.', en: 'Kateryna works with students and researchers on the structure, style, and clarity of academic writing.' },
-    fullDescription: { uk: 'Катерина допомагає студентам і дослідникам планувати аргументовані академічні тексти. На заняттях вона працює над структурою, академічним стилем, зв’язністю та редагуванням власних чернеток студентів.', en: 'Kateryna helps students and researchers plan well-supported academic writing. Lessons focus on structure, academic style, cohesion, and revising students’ own drafts.' },
-    rating: 4.8,
-    level: 'C2',
+    specialty: { uk: 'Академічне письмо та вступ за кордон', en: 'Academic writing and study abroad' },
+    description: {
+      uk: 'Катерина допомагає студентам писати мотиваційні листи, есе та наукові статті англійською для вступу до закордонних університетів.',
+      en: 'Kateryna helps students write motivation letters, essays, and research papers in English for admission to foreign universities.'
+    },
+    fullDescription: {
+      uk: 'Катерина працює над структурою тексту, академічним стилем, аргументацією та редагуванням реальних документів студентів для стипендіальних програм.',
+      en: 'Kateryna focuses on text structure, academic register, argumentation, and editing students’ actual application documents for scholarship programmes.'
+    },
+    rating: 4.6,
+    level: 'B2–C2',
     experienceYears: 8,
-    hourlyRate: 34,
+    hourlyRate: 13,
     photoClass: 'teacher-photo-three',
-    image: 'https://images.unsplash.com/photo-1551836022-8b2858c9c69b?auto=format&fit=crop&w=900&q=85',
+    image: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&crop=faces&w=900&h=620&q=85',
     languages: { uk: ['Українська', 'Англійська'], en: ['Ukrainian', 'English'] },
     format: { uk: ['Онлайн'], en: ['Online'] },
     specializations: { uk: ['Академічне письмо', 'IELTS Writing'], en: ['Academic writing', 'IELTS Writing'] },
@@ -158,19 +213,25 @@ const teachers = [
   {
     id: 10,
     name: { uk: 'Андрій Кравець', en: 'Andrii Kravets' },
-    specialty: { uk: 'Підготовка до Cambridge English', en: 'Cambridge English preparation' },
-    description: { uk: 'Андрій готує студентів до Cambridge English, поєднуючи систематичну практику з чіткими стратегіями іспиту.', en: 'Andrii prepares students for Cambridge English with structured practice and clear exam strategies.' },
-    fullDescription: { uk: 'Андрій структурує підготовку до Cambridge English так, щоб студенти мали час попрактикувати кожну частину іспиту. Він пояснює стратегії виконання завдань, критерії оцінювання та допомагає відстежувати прогрес.', en: 'Andrii structures Cambridge English preparation so learners can practise every part of the exam. He explains task strategies and assessment criteria and helps students track their progress.' },
+    specialty: { uk: 'Підготовка до Cambridge English (FCE / CAE)', en: 'Cambridge English preparation (FCE / CAE)' },
+    description: {
+      uk: 'Андрій готує до безстрокових сертифікатів Cambridge B2 First та C1 Advanced за структурованою програмою з регулярними пробними тестами.',
+      en: 'Andrii prepares learners for lifelong Cambridge B2 First and C1 Advanced certificates with structured practice and mock exams.'
+    },
+    fullDescription: {
+      uk: 'Андрій має 12 років викладацького стажу, детально розбирає Use of English, вчить тайм-менеджменту на іспиті та доводить граматику й лексику до автоматизму.',
+      en: 'With 12 years of teaching experience, Andrii breaks down Use of English, teaches exam time-management, and sharpens grammar and vocabulary.'
+    },
     rating: 4.9,
-    level: 'C2',
+    level: 'B2–C2',
     experienceYears: 12,
-    hourlyRate: 36,
+    hourlyRate: 15,
     photoClass: 'teacher-photo-two',
-    image: 'https://images.unsplash.com/photo-1507591064344-4c6ce005b128?auto=format&fit=crop&w=900&q=85',
+    image: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&crop=faces&w=900&h=620&q=85',
     languages: { uk: ['Українська', 'Англійська'], en: ['Ukrainian', 'English'] },
     format: { uk: ['Онлайн', 'Офлайн'], en: ['Online', 'In person'] },
     specializations: { uk: ['Cambridge English', 'IELTS', 'Граматика'], en: ['Cambridge English', 'IELTS', 'Grammar'] },
-    education: { uk: ['DELTA', 'Cambridge Assessment English'], en: ['DELTA', 'Cambridge Assessment English'] }
+    education: { uk: ['DELTA', 'Cambridge Assessment Examiner'], en: ['DELTA', 'Cambridge Assessment Examiner'] }
   }
 ];
 

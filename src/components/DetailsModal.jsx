@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import SavedButton from './SavedButton.jsx';
 import CourseReviewsPanel from './CourseReviewsPanel.jsx';
 import RatingStars from './RatingStars.jsx';
-import { createReview } from '../services/reviewService.js';
+import { createReview, getTeacherReviews } from '../services/reviewService.js';
 
 function getLocalized(value, language) {
   if (!value) return '';
@@ -42,6 +42,11 @@ export default function DetailsModal({
   const [reviewMessage, setReviewMessage] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Живий рейтинг та список відгуків викладача
+  const [liveRating, setLiveRating] = useState(typeof item.rating === 'number' ? item.rating : 5.0);
+  const [reviewsCount, setReviewsCount] = useState(item.reviewsCount || 0);
+  const [teacherReviews, setTeacherReviews] = useState([]);
+
   const title = getLocalized(type === 'course' ? item.title : item.name, language);
   const description = getLocalized(item.description, language);
   const fullDescription = getLocalized(item.fullDescription || item.description, language);
@@ -53,7 +58,7 @@ export default function DetailsModal({
 
   const price = type === 'course' ? item.price : item.hourlyRate;
   const period = type === 'course' ? (t && t.perMonth) || '/міс' : (t && t.perLesson) || '/урок';
-  const ratingVal = typeof item.rating === 'number' ? item.rating.toFixed(1) : '5.0';
+  const ratingVal = Number(liveRating || 0).toFixed(1);
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
@@ -77,6 +82,30 @@ export default function DetailsModal({
     }
   }, [focusReview, type]);
 
+  // Підтягуємо актуальні відгуки та рейтинг викладача при відкритті модалки
+  useEffect(() => {
+    if (type !== 'teacher' || !item?.id) return;
+    let active = true;
+
+    async function loadTeacherReviews() {
+      try {
+        const res = await getTeacherReviews(item.id);
+        if (!active) return;
+        const list = Array.isArray(res) ? res : res?.data || [];
+        setTeacherReviews(list);
+        if (res?.ratingStats) {
+          setLiveRating(res.ratingStats.averageRating || item.rating || 5.0);
+          setReviewsCount(res.ratingStats.reviewsCount || list.length);
+        }
+      } catch {
+        // Ігноруємо, якщо відгуків ще немає
+      }
+    }
+
+    loadTeacherReviews();
+    return () => { active = false; };
+  }, [type, item]);
+
   async function submitReview(event) {
     event.preventDefault();
     if (!reviewRating) {
@@ -88,7 +117,7 @@ export default function DetailsModal({
       return;
     }
     if (!user) {
-      setReviewMessage({ type: 'info', text: (t && t.reviewLoginRequired) || 'Увійдіть для відправки відгуку.' });
+      setReviewMessage({ type: 'info', text: (t && t.reviewLoginRequired) || 'Увійдіть в акаунт для відправки відгуку.' });
       if (onRequestAuth) onRequestAuth();
       return;
     }
@@ -97,14 +126,31 @@ export default function DetailsModal({
     setReviewMessage(null);
 
     try {
-      await createReview({
+      const result = await createReview({
         teacherId: type === 'teacher' ? item.id : null,
         courseId: type === 'course' ? item.id : null,
         teacherName: item.name || item.title,
-        authorName: user.name || user.email || 'Користувач',
+        authorName: user.name || user.email || 'Студент',
         rating: reviewRating,
         text: reviewText
       });
+
+      // Оновлюємо рейтинг у модалці миттєво
+      if (result?.updatedRating) {
+        setLiveRating(result.updatedRating.averageRating);
+        setReviewsCount(result.updatedRating.reviewsCount);
+      }
+
+      // Додаємо новий відгук у список прямо в модалці
+      const createdEntry = {
+        id: result?.data?.id || Date.now(),
+        rating: reviewRating,
+        comment: reviewText.trim(),
+        createdAt: new Date().toISOString(),
+        user: { name: user.name || user.email || 'Студент' }
+      };
+      setTeacherReviews((prev) => [createdEntry, ...prev]);
+
       setReviewRating(0);
       setReviewText('');
       setReviewMessage({ type: 'success', text: (t && t.reviewSubmitSuccess) || 'Відгук успішно додано!' });
@@ -146,7 +192,7 @@ export default function DetailsModal({
             <div className="details-summary">
               {type === 'course' && <span>{(t && t.catalogLevel) || 'Рівень'}: {item.level || 'A1–C2'}</span>}
               <span>{type === 'course' ? category : item.level || 'A1–C2'}</span>
-              <span className="details-rating">★ {ratingVal}</span>
+              <span className="details-rating">★ {ratingVal} {reviewsCount > 0 ? `(${reviewsCount})` : ''}</span>
               <span>{price != null ? `${price} € ${period}` : ((t && t.priceNotAvailable) || 'Ціна за запитом')}</span>
             </div>
             <p>{description}</p>
@@ -239,6 +285,21 @@ export default function DetailsModal({
                     </p>
                   )}
                 </form>
+
+                {teacherReviews.length > 0 && (
+                  <div className="teacher-reviews-list" style={{ marginTop: '1.25rem' }}>
+                    <h4>{(t && t.studentReviews) || 'Відгуки студентів'} ({teacherReviews.length})</h4>
+                    {teacherReviews.map((rev, idx) => (
+                      <div key={rev.id || idx} className="teacher-review-item" style={{ padding: '0.75rem 0', borderBottom: '1px solid rgba(0,0,0,0.08)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+                          <strong>{rev.user?.name || rev.authorName || 'Студент'}</strong>
+                          <span>{'★'.repeat(rev.rating || 5)}</span>
+                        </div>
+                        <p style={{ margin: 0 }}>{rev.comment || rev.text}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </section>
             </>
           )}

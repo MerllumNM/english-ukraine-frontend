@@ -1,34 +1,61 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { getLatestReviews, subscribeToReviewChanges } from '../services/reviewService.js';
 
+function getLocalizedTeacherName(teacherName, language) {
+  if (!teacherName) return '';
+  if (typeof teacherName === 'string') return teacherName;
+  return teacherName[language] || teacherName.uk || teacherName.en || '';
+}
+
 function ReviewCard({ review, language, t }) {
-  const date = new Date(review.date);
+  if (!review) return null;
+
+  const date = new Date(review.date || review.createdAt || Date.now());
+  
+  // Безпечно витягуємо текст відгуку
+  const reviewText = review.text || review.comment || review.message || '';
+  
+  // Витягуємо ім'я автора (додано review.user?.name з Prisma)
+  const authorName =
+    review.user?.name ||
+    review.authorName ||
+    review.author?.name ||
+    review.userName ||
+    'Студент';
+  
+  // Витягуємо ім'я викладача
+  const rawTeacherName = review.teacherName || review.teacher?.name;
+  const teacherNameStr = getLocalizedTeacherName(rawTeacherName, language);
+
+  const rating = Number(review.rating) || 5;
 
   return (
     <article className="review-card">
       <div className="review-card-top">
-        <div className="review-stars" role="img" aria-label={t.reviewRating(review.rating)}>
+        <div className="review-stars" role="img" aria-label={(t && t.reviewRating) ? t.reviewRating(rating) : `${rating} зірок`}>
           {Array.from({ length: 5 }, (_, index) => (
-            <span className={index < review.rating ? 'is-filled' : ''} key={index} aria-hidden="true">★</span>
+            <span className={index < rating ? 'is-filled' : ''} key={index} aria-hidden="true">★</span>
           ))}
         </div>
         <span className="review-quote-mark" aria-hidden="true">“</span>
       </div>
-      <p className="review-text">{review.text}</p>
+      <p className="review-text">{reviewText}</p>
       <footer className="review-author">
-        <span className="review-avatar" aria-hidden="true">{review.authorName.charAt(0)}</span>
+        <span className="review-avatar" aria-hidden="true">{authorName.charAt(0).toUpperCase()}</span>
         <span className="review-author-details">
-          <strong>{review.authorName}</strong>
-          <time dateTime={review.date}>
+          <strong>{authorName}</strong>
+          <time dateTime={date.toISOString()}>
             {new Intl.DateTimeFormat(language === 'uk' ? 'uk-UA' : 'en-GB', {
               day: 'numeric',
               month: 'long',
               year: 'numeric'
             }).format(date)}
           </time>
-          <span className="review-teacher-name">
-              {t.reviewForTeacher}: {review.teacherName[language]}
-          </span>
+          {teacherNameStr && (
+            <span className="review-teacher-name">
+              {((t && t.reviewForTeacher) || 'Викладач')}: {teacherNameStr}
+            </span>
+          )}
         </span>
       </footer>
     </article>
@@ -43,19 +70,29 @@ export default function ReviewsSection({ language, t }) {
   const [loadError, setLoadError] = useState('');
 
   useEffect(() => {
-    function refreshReviews() {
+    let isMounted = true;
+
+    async function refreshReviews() {
       try {
-        setLatestReviews(getLatestReviews(5));
+        const data = await getLatestReviews(5);
+        if (!isMounted) return;
+        setLatestReviews(Array.isArray(data) ? data : []);
         setLoadError('');
       } catch (error) {
         console.error('Unable to load saved reviews.', error);
-        setLoadError(t.reviewLoadError);
+        if (!isMounted) return;
+        setLoadError((t && t.reviewLoadError) || 'Не вдалося завантажити відгуки.');
       }
     }
 
     refreshReviews();
-    return subscribeToReviewChanges(refreshReviews);
-  }, [t.reviewLoadError]);
+    const unsubscribe = subscribeToReviewChanges(refreshReviews);
+
+    return () => {
+      isMounted = false;
+      if (typeof unsubscribe === 'function') unsubscribe();
+    };
+  }, [t]);
 
   useEffect(() => {
     const track = trackRef.current;
@@ -90,39 +127,42 @@ export default function ReviewsSection({ language, t }) {
     });
   }
 
+  const reviewsList = Array.isArray(latestReviews) ? latestReviews : [];
+  const translations = t || {};
+
   return (
     <section className="reviews-section" aria-labelledby="reviews-title">
       <div className="courses-inner">
         <header className="courses-intro">
-          <p className="section-eyebrow">{t.reviewsEyebrow}</p>
-          <h2 id="reviews-title">{t.reviewsTitle}</h2>
+          <p className="section-eyebrow">{translations.reviewsEyebrow || 'Відгуки'}</p>
+          <h2 id="reviews-title">{translations.reviewsTitle || 'Що кажуть наші студенти'}</h2>
         </header>
         {loadError ? (
           <p className="reviews-empty" role="alert">{loadError}</p>
-        ) : latestReviews.length === 0 ? (
-          <p className="reviews-empty">{t.reviewEmptyState}</p>
+        ) : reviewsList.length === 0 ? (
+          <p className="reviews-empty">{translations.reviewEmptyState || 'Поки немає відгуків.'}</p>
         ) : (
           <div className="reviews-carousel">
             <div
               className="reviews-track"
               ref={trackRef}
               role="region"
-              aria-label={t.reviewsTitle}
+              aria-label={translations.reviewsTitle || 'Відгуки'}
               tabIndex={0}
             >
-              {latestReviews.map((review) => (
-                <ReviewCard key={review.id} review={review} language={language} t={t} />
+              {reviewsList.map((review, index) => (
+                <ReviewCard key={review.id || index} review={review} language={language} t={translations} />
               ))}
             </div>
             <div className="reviews-controls">
-              <p className="reviews-demo-note">{t.reviewsRecentNote}</p>
+              <p className="reviews-demo-note">{translations.reviewsRecentNote || ''}</p>
               <div className="reviews-arrows">
                 <button
                   type="button"
                   className="reviews-arrow"
                   onClick={() => scrollReviews(-1)}
                   disabled={!canScrollPrevious}
-                  aria-label={t.previousReviews}
+                  aria-label={translations.previousReviews || 'Попередні відгуки'}
                 >
                   <span aria-hidden="true">←</span>
                 </button>
@@ -131,7 +171,7 @@ export default function ReviewsSection({ language, t }) {
                   className="reviews-arrow"
                   onClick={() => scrollReviews(1)}
                   disabled={!canScrollNext}
-                  aria-label={t.nextReviews}
+                  aria-label={translations.nextReviews || 'Наступні відгуки'}
                 >
                   <span aria-hidden="true">→</span>
                 </button>

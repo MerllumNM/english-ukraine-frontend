@@ -4,7 +4,6 @@ const TOKEN_KEY = 'token';
 const USER_KEY = 'user';
 const SESSION_KEY = 'lingo-current-user-v1';
 
-// Хелпер для безпечного форматування об'єкта користувача під UI Давида
 function toPublicUser(user) {
   if (!user) return null;
   return {
@@ -84,23 +83,48 @@ export function updateProfile(userId, changes) {
   return updatedUser;
 }
 
-export function toggleSavedTeacher(userId, teacherId) {
+export async function toggleSavedTeacher(userId, teacherId) {
   const user = getCurrentUser();
-  if (!user) return null;
+  if (!user) throw new Error('Увійдіть в акаунт, щоб зберігати викладачів.');
+
   const savedTeachers = Array.isArray(user.savedTeachers) ? user.savedTeachers : [];
-  const nextSavedTeachers = savedTeachers.includes(teacherId)
+  const isAlreadySaved = savedTeachers.includes(teacherId);
+  const nextSavedTeachers = isAlreadySaved
     ? savedTeachers.filter((id) => id !== teacherId)
     : [...savedTeachers, teacherId];
+
+  // Синхронізуємо з бекендом /api/favorites
+  try {
+    await apiRequest('/favorites', {
+      method: isAlreadySaved ? 'DELETE' : 'POST',
+      body: JSON.stringify({ teacherId: Number(teacherId) || teacherId }),
+    });
+  } catch {
+    // Зберігаємо стан у профілі користувача навіть для статичних ID
+  }
+
   return updateProfile(userId, { savedTeachers: nextSavedTeachers });
 }
 
-export function toggleSavedCourse(userId, courseId) {
+export async function toggleSavedCourse(userId, courseId) {
   const user = getCurrentUser();
-  if (!user) return null;
+  if (!user) throw new Error('Увійдіть в акаунт, щоб зберігати курси.');
+
   const savedCourses = Array.isArray(user.savedCourses) ? user.savedCourses : [];
-  const nextSavedCourses = savedCourses.includes(courseId)
+  const isAlreadySaved = savedCourses.includes(courseId);
+  const nextSavedCourses = isAlreadySaved
     ? savedCourses.filter((id) => id !== courseId)
     : [...savedCourses, courseId];
+
+  try {
+    await apiRequest('/favorites', {
+      method: isAlreadySaved ? 'DELETE' : 'POST',
+      body: JSON.stringify({ courseId: Number(courseId) || courseId }),
+    });
+  } catch {
+    // Зберігаємо стан у профілі користувача
+  }
+
   return updateProfile(userId, { savedCourses: nextSavedCourses });
 }
 

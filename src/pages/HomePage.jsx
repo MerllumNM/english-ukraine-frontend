@@ -5,6 +5,16 @@ import SavedButton from '../components/SavedButton.jsx';
 import PlacementTestModal from '../components/PlacementTestModal.jsx';
 import ReviewsSection from '../components/ReviewsSection.jsx';
 
+const UAH_RATE = 45;
+
+function formatHomeCoursePrice(eurPrice, language) {
+  if (language === 'en') {
+    return `${eurPrice} €`;
+  }
+  const uah = Math.round((Number(eurPrice) * UAH_RATE) / 50) * 50;
+  return `${uah.toLocaleString('uk-UA')} грн`;
+}
+
 function PersonIcon() {
   return (
     <svg viewBox="0 0 20 20" aria-hidden="true">
@@ -31,30 +41,20 @@ function StarIcon() {
   );
 }
 
-function CourseIcon({ type }) {
-  const paths = {
-    general: <><path d="M5 5.5h10a3 3 0 0 1 3 3v8H8a3 3 0 0 1-3-3z"></path><path d="M5 13.5a3 3 0 0 1 3-3h10M9 7.5h5m-5 3h3"></path></>,
-    business: <><rect x="4" y="7" width="16" height="12" rx="2"></rect><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-11 5h16m-10 0v2h4v-2"></path></>,
-    exam: <><path d="M7 4h8l4 4v12H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"></path><path d="M15 4v5h5m-10 4h5m-5 4h5"></path><path d="m8 13 1 1 2-2"></path></>
-  };
-
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      {paths[type]}
-    </svg>
-  );
-}
-
 function CourseCard({ course, t, language, isSaved, onToggleSave, onOpen }) {
   return (
     <article className="course-card" id={`course-${course.id}`}>
-      <div className={`course-artwork ${course.artwork}`.trim()}>
-        <span className="course-tag">{t[course.tag]}</span>
-        <span className="course-icon">
-          <CourseIcon type={course.icon} />
-        </span>
-        <span className="course-number" aria-hidden="true">
-          {String(courses.indexOf(course) + 1).padStart(2, '0')}
+      <div className={`course-artwork ${course.artwork}`.trim()} style={{ position: 'relative', overflow: 'hidden', padding: 0 }}>
+        {course.image && (
+          <img
+            src={course.image}
+            alt={course.title[language]}
+            loading="lazy"
+            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+          />
+        )}
+        <span className="course-tag" style={{ position: 'absolute', top: '12px', left: '12px', zIndex: 2 }}>
+          {t[course.tag]}
         </span>
       </div>
       <div className="course-content">
@@ -67,13 +67,17 @@ function CourseCard({ course, t, language, isSaved, onToggleSave, onOpen }) {
           </span>
           <span>
             <ClockIcon />
-            <span>{t.threeMonths}</span>
+            <span>{course.duration?.[language] || t.threeMonths}</span>
           </span>
         </div>
         <div className="course-footer">
-          <p><strong>{course.price} €</strong> <span>{t.perMonth}</span></p>
+          <p>
+            <strong className="catalog-price-pill">{formatHomeCoursePrice(course.price, language)}</strong>{' '}
+            <span>{t.perMonth}</span>
+          </p>
           <a
             href="/courses"
+            className="home-course-view-btn"
             onClick={(event) => {
               event.preventDefault();
               onOpen(course.id);
@@ -93,13 +97,22 @@ function TeacherCard({ teacher, t, language, isSaved, onToggleSave, onOpen }) {
   return (
     <article className="teacher-card" id={`teacher-${teacher.id}`}>
       <div className="teacher-frame">
-        <div className={`teacher-photo ${teacher.photoClass}`.trim()}>
-          <span>{t[`teacherPhoto${teacher.id}`]}</span>
+        <div className={`teacher-photo ${teacher.photoClass}`.trim()} style={{ position: 'relative', overflow: 'hidden', padding: 0 }}>
+          {teacher.image ? (
+            <img
+              src={teacher.image}
+              alt={teacher.name[language]}
+              loading="lazy"
+              style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 20%', display: 'block' }}
+            />
+          ) : (
+            <span>{t[`teacherPhoto${teacher.id}`]}</span>
+          )}
           <div
             className="teacher-rating"
             aria-label={t[`teacherRating${teacher.id}`]}
           >
-            <span>{teacher.rating}</span>
+            <span>{teacher.rating.toFixed(1)}</span>
             <StarIcon />
           </div>
         </div>
@@ -295,7 +308,7 @@ export default function HomePage({
                   teacher={teacher}
                   t={t}
                   language={language}
-                  isSaved={Boolean(user?.savedTeachers.includes(teacher.id))}
+                  isSaved={Boolean(user?.savedTeachers?.includes(teacher.id))}
                   onToggleSave={() => toggleTeacher(teacher.id)}
                   onOpen={onOpenTeacher}
                 />

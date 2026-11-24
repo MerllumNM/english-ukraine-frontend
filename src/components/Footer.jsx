@@ -26,7 +26,7 @@ export default function Footer({ t }) {
         </div>
         <div className="footer-bottom">
           <a className="footer-brand" href="#home" aria-label={t.footerBrandHomeLabel}>
-            <span className="brand-icon" aria-hidden="true">E</span>
+            <span className="brand-icon" aria-hidden="true">L</span>
             <span className="footer-brand-name">L.e.v.e.l</span>
           </a>
           <p className="footer-copyright">{t.footerCopyright}</p>

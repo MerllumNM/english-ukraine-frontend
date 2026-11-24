@@ -3,13 +3,39 @@ import CatalogFilters from '../components/CatalogFilters.jsx';
 import DetailsModal from '../components/DetailsModal.jsx';
 import SavedButton from '../components/SavedButton.jsx';
 import { catalogService } from '../services/catalogService.js';
+import staticTeachers from '../data/teachers.js';
+import staticCourses from '../data/courses.js';
 
 const LEVEL_RANK = { A1: 1, A2: 2, B1: 3, B2: 4, C1: 5, C2: 6 };
+const UAH_RATE = 45;
 
 function getLocalized(value, language) {
   if (!value) return '';
   if (typeof value === 'string') return value;
   return value[language] || value.uk || value.en || '';
+}
+
+function toDisplayPrice(eurAmount, language) {
+  if (eurAmount == null || Number.isNaN(Number(eurAmount))) return null;
+  if (language === 'en') return Number(eurAmount);
+  return Math.round((Number(eurAmount) * UAH_RATE) / 10) * 10;
+}
+
+function formatPriceBadge(amount, isCourse, language, t) {
+  const displayValue = toDisplayPrice(amount, language);
+  if (displayValue == null) {
+    return (t && t.priceNotAvailable) || (language === 'en' ? 'On request' : 'Ціна за запитом');
+  }
+
+  const suffix = isCourse
+    ? (language === 'en' ? '/mo' : '/міс')
+    : (language === 'en' ? '/lesson' : '/урок');
+
+  if (language === 'en') {
+    return `${displayValue} € ${suffix}`;
+  }
+
+  return `${displayValue.toLocaleString('uk-UA')} грн ${suffix}`;
 }
 
 function matchesLevel(itemLevel, selectedGroup) {
@@ -21,7 +47,6 @@ function matchesLevel(itemLevel, selectedGroup) {
   return maximum >= groupMinimum && minimum <= groupMinimum + 1;
 }
 
-// Нормалізатор об'єктів з бекенду під вимоги фронтенду
 function normalizeCatalogItem(item, isCourse) {
   if (!item) return item;
   return {
@@ -31,10 +56,10 @@ function normalizeCatalogItem(item, isCourse) {
     title: item.title || item.name || 'Курс',
     description: item.description || item.bio || '',
     image: item.image || item.avatarUrl || '',
-    rating: typeof item.rating === 'number' ? item.rating : 5.0,
+    rating: typeof item.rating === 'number' ? item.rating : 4.8,
     experienceYears: item.experienceYears ?? item.experience ?? 1,
-    hourlyRate: item.hourlyRate ?? item.price ?? 15,
-    price: item.price ?? item.hourlyRate ?? 15,
+    hourlyRate: item.hourlyRate ?? item.price ?? 10,
+    price: item.price ?? item.hourlyRate ?? 75,
     level: item.level || 'A1–C2',
     specialty: item.specialty || 'Загальна англійська',
     category: item.category || 'Загальна англійська',
@@ -50,7 +75,7 @@ function CatalogCard({ item, type, language, t, isSaved, onToggle, onOpen, onRat
   const title = getLocalized(isCourse ? item.title : item.name, language);
   const description = getLocalized(item.description, language);
   const specialty = !isCourse && getLocalized(item.specialty, language);
-  
+
   let category = '';
   if (isCourse) {
     category = getLocalized(item.category, language);
@@ -63,7 +88,9 @@ function CatalogCard({ item, type, language, t, isSaved, onToggle, onOpen, onRat
   }
 
   const photoClass = isCourse || !item.photoClass ? '' : ` ${item.photoClass}`;
-  const ratingVal = typeof item.rating === 'number' ? item.rating.toFixed(1) : '5.0';
+  const ratingVal = typeof item.rating === 'number' ? item.rating.toFixed(1) : '4.8';
+  const rawPrice = isCourse ? item.price : item.hourlyRate;
+  const priceLabel = formatPriceBadge(rawPrice, isCourse, language, t);
 
   return (
     <article
@@ -96,11 +123,7 @@ function CatalogCard({ item, type, language, t, isSaved, onToggle, onOpen, onRat
         <p className="catalog-card-description">{description}</p>
         <div className="catalog-card-meta">
           <span>{isCourse ? category : `${item.experienceYears} ${(t && t.years) || 'р.'}`}</span>
-          <span>
-            {isCourse
-              ? item.price == null ? ((t && t.priceNotAvailable) || 'Ціна за запитом') : `${item.price} € ${(t && t.perMonth) || '/міс'}`
-              : `${item.hourlyRate} € ${(t && t.perLesson) || '/урок'}`}
-          </span>
+          <span className="catalog-price-pill">{priceLabel}</span>
         </div>
         <div className="catalog-card-actions">
           <button className="catalog-details-button" type="button" onClick={(event) => { event.stopPropagation(); onOpen(); }}>
@@ -142,9 +165,10 @@ export default function CatalogPage({
   onConsumeOpenItem
 }) {
   const isCourse = type === 'course';
-  const [rawItems, setRawItems] = useState(initialItems || []);
-  const [isLoading, setIsLoading] = useState(!initialItems || initialItems.length === 0);
-  const [apiError, setApiError] = useState('');
+  const baseCatalog = useMemo(() => (isCourse ? staticCourses : staticTeachers), [isCourse]);
+  const [rawItems, setRawItems] = useState(initialItems?.length ? initialItems : baseCatalog);
+  const [isLoading, setIsLoading] = useState(false);
+  const [apiError] = useState('');
 
   const [search, setSearch] = useState('');
   const [level, setLevel] = useState('');
@@ -156,43 +180,61 @@ export default function CatalogPage({
   const [focusReview, setFocusReview] = useState(false);
   const [saveError, setSaveError] = useState('');
 
-  // Отримання та нормалізація даних з бекенду
+  const deduplicateItems = useCallback(
+    (list) => {
+      const seenIds = new Set();
+      const seenTitles = new Set();
+      return list.filter((item) => {
+        const idKey = String(item.id || '').trim().toLowerCase();
+        const titleKey = getLocalized(isCourse ? item.title : item.name, 'uk').trim().toLowerCase();
+        if ((idKey && seenIds.has(idKey)) || (titleKey && seenTitles.has(titleKey))) {
+          return false;
+        }
+        if (idKey) seenIds.add(idKey);
+        if (titleKey) seenTitles.add(titleKey);
+        return true;
+      });
+    },
+    [isCourse]
+  );
+
   const fetchCatalogData = useCallback(async () => {
-    setIsLoading(true);
-    setApiError('');
     try {
-      let responseData = [];
-      if (isCourse) {
-        responseData = await catalogService.getCourses();
-      } else {
-        responseData = await catalogService.getTeachers();
-      }
-      
-      const list = Array.isArray(responseData)
+      const responseData = isCourse
+        ? await catalogService.getCourses()
+        : await catalogService.getTeachers();
+
+      const apiList = Array.isArray(responseData)
         ? responseData
         : (responseData?.teachers || responseData?.courses || responseData?.data || responseData?.items || []);
-        
-      setRawItems(list);
-    } catch (err) {
-      setApiError(err.message || 'Не вдалося завантажити каталог з сервера');
+
+      const validApiItems = apiList
+        .filter((item) => {
+          const nameStr = typeof item.name === 'string' ? item.name : '';
+          return !nameStr.includes('Олена Ковальчук') && !(item.avatarUrl || '').includes('via.placeholder.com');
+        })
+        .map((item) => normalizeCatalogItem(item, isCourse));
+
+      setRawItems(deduplicateItems([...baseCatalog, ...validApiItems]));
+    } catch {
+      setRawItems(deduplicateItems(baseCatalog));
     } finally {
       setIsLoading(false);
     }
-  }, [isCourse]);
+  }, [isCourse, baseCatalog, deduplicateItems]);
 
   useEffect(() => {
     if (initialItems && initialItems.length > 0) {
-      setRawItems(initialItems);
+      setRawItems(deduplicateItems([...baseCatalog, ...initialItems]));
       setIsLoading(false);
     } else {
       fetchCatalogData();
     }
-  }, [initialItems, fetchCatalogData]);
+  }, [initialItems, baseCatalog, deduplicateItems, fetchCatalogData]);
 
-  // Мапимо всі елементи через нормалізатор
   const items = useMemo(() => {
-    return rawItems.map((item) => normalizeCatalogItem(item, isCourse));
-  }, [rawItems, isCourse]);
+    return deduplicateItems(rawItems.map((item) => normalizeCatalogItem(item, isCourse)));
+  }, [rawItems, isCourse, deduplicateItems]);
 
   const closeDetails = useCallback(() => setSelectedItem(null), []);
   const title = isCourse ? (t.catalogCoursesTitle || 'Курси') : (t.teachersTitle || 'Викладачі');
@@ -233,7 +275,7 @@ export default function CatalogPage({
     const filtered = items.filter((item) => {
       const itemName = getLocalized(isCourse ? item.title : item.name, language);
       const itemDescription = getLocalized(item.description, language);
-      
+
       let itemCategories = [];
       if (isCourse) {
         itemCategories = [getLocalized(item.category, language)];
@@ -243,15 +285,17 @@ export default function CatalogPage({
         itemCategories = [getLocalized(item.specialty, language)];
       }
 
-      const itemPrice = isCourse ? item.price : item.hourlyRate;
+      const rawPrice = isCourse ? item.price : item.hourlyRate;
+      const comparablePrice = toDisplayPrice(rawPrice, language);
+
       const matchesSearch = !normalizedQuery
         || itemName.toLocaleLowerCase(language).includes(normalizedQuery)
         || itemDescription.toLocaleLowerCase(language).includes(normalizedQuery);
       return matchesSearch
         && matchesLevel(item.level, level)
         && (!category || itemCategories.includes(category))
-        && (!minPrice || (itemPrice != null && itemPrice >= Number(minPrice)))
-        && (!maxPrice || (itemPrice != null && itemPrice <= Number(maxPrice)));
+        && (!minPrice || (comparablePrice != null && comparablePrice >= Number(minPrice)))
+        && (!maxPrice || (comparablePrice != null && comparablePrice <= Number(maxPrice)));
     });
 
     return filtered.sort((first, second) => {
@@ -327,29 +371,12 @@ export default function CatalogPage({
 
       {saveError && <p className="auth-error catalog-save-error" role="alert">{saveError}</p>}
 
-      {/* Стан завантаження */}
       {isLoading && (
         <div className="catalog-loading" style={{ textAlign: 'center', padding: '3rem 1rem' }}>
           <p style={{ fontSize: '1.2rem', opacity: 0.8 }}>{(t && t.loading) || 'Завантаження каталогів з сервера...'}</p>
         </div>
       )}
 
-      {/* Стан помилки */}
-      {!isLoading && apiError && (
-        <div className="catalog-error" style={{ textAlign: 'center', padding: '2rem 1rem', color: '#e53e3e' }}>
-          <p>{apiError}</p>
-          <button
-            type="button"
-            className="catalog-details-button"
-            style={{ marginTop: '1rem', cursor: 'pointer' }}
-            onClick={fetchCatalogData}
-          >
-            {(t && t.retry) || 'Спробувати знову'}
-          </button>
-        </div>
-      )}
-
-      {/* Основний вміст каталогів */}
       {!isLoading && !apiError && (
         <>
           <p className="catalog-result-count" aria-live="polite">
